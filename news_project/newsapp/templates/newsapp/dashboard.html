@@ -1,0 +1,19 @@
+
+{% extends 'base.html' %}
+{% load group_filters %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+    <h1>Dashboard</h1>
+
+    {% if user|in_group:"Journalist" %}
+        <p>Welcome, Journalist! You can create and manage your articles.</p>
+    {% elif user|in_group:"Editor" %}
+        <p>Welcome, Editor! You can review and approve articles.</p>
+    {% elif user|in_group:"Reader" %}
+        <p>Welcome, Reader! You can review and approve articles.</p>
+    {% else %}
+        <p>Unknown group</p>
+    {% endif %}
+{% endblock %}

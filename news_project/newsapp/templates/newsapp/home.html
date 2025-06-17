@@ -1,0 +1,21 @@
+{% load static %}
+
+
+{% block title %}Welcome to NewsApp{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h1 class="display-4">📰 Welcome to NewsApp</h1>
+    <p class="lead">Your trusted source for publisher-approved journalism.</p>
+
+    {% comment %} {% if user.is_authenticated %}
+        <p class="mt-4">Welcome back, <strong>{{ user.username }}</strong>!</p>
+        <a href="{% url 'dashboard' %}" class="btn btn-primary mt-2">Go to Dashboard</a>
+    {% else %} {% endcomment %}
+        <div class="mt-4">
+            <a href="{% url 'login' %}" class="btn btn-success me-2">Login</a>
+            <a href="{% url 'register' %}" class="btn btn-outline-secondary">Register</a>
+        </div>
+    {% comment %} {% endif %} {% endcomment %}
+</div>
+{% endblock %}
