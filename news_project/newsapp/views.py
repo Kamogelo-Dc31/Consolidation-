@@ -18,24 +18,31 @@ from django.contrib import messages
 
 # Role check helpers
 def is_journalist(user):
+    """Check if the user is in the Journalist group."""
     return user.groups.filter(name='Journalist').exists()
 
 
 def is_editor(user):
+    """Check if the user is in the Editor group."""
     return user.groups.filter(name='Editor').exists()
 
 
 def is_reader(user):
+    """Check if the user is in the Reader group."""
     return user.groups.filter(name='Reader').exists()
 
 
 # Home Page
 def home_view(request):
+    """Render the homepage."""
     return render(request, 'newsapp/home.html')
 
 
 # Registration
 def register_view(request):
+    """
+    Handle user registration and assign them to a selected group.
+    """
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
@@ -44,7 +51,6 @@ def register_view(request):
             try:
                 group = Group.objects.get(name=role)
                 user.groups.add(group)
-             
             except Group.DoesNotExist:
                 messages.warning(request, f"The group '{role}' does not exist.")
             login(request, user)
@@ -56,12 +62,18 @@ def register_view(request):
 
 
 def some_view(request):
+    """
+    Example view to demonstrate template rendering with user role context.
+    """
     is_journalist = request.user.groups.filter(name='Journalist').exists()
     return render(request, 'newsapp/some_template.html', {'is_journalist': is_journalist})
 
 
 # Login
 def login_view(request):
+    """
+    Authenticate and log in users with the default AuthenticationForm.
+    """
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
@@ -77,19 +89,24 @@ def login_view(request):
 
 
 def logout_view(request):
+    """Log out the user and redirect to homepage."""
     logout(request)
     messages.success(request, "You have successfully logged out.")
     return redirect('home')
 
+
 # Dashboard
-
-
 def dashboard_view(request):
+    """Render the user dashboard page."""
     return render(request, 'newsapp/dashboard.html')
+
 
 # Reader Subscriptions
 @user_passes_test(is_reader)
 def manage_subscriptions(request):
+    """
+    Allow readers to manage their subscriptions to publishers or journalists.
+    """
     user = request.user
     if request.method == 'POST':
         form = SubscriptionForm(request.POST, instance=user)
@@ -101,8 +118,12 @@ def manage_subscriptions(request):
         form = SubscriptionForm(instance=user)
     return render(request, 'newsapp/subscriptions.html', {'form': form})
 
+
 # Article Views
 def article_list_view(request):
+    """
+    List articles based on user role (Reader, Editor, or Journalist).
+    """
     if is_reader(request.user):
         articles = Article.objects.filter(approved=True)
     elif is_editor(request.user):
@@ -115,6 +136,9 @@ def article_list_view(request):
 
 
 def article_detail_view(request, pk):
+    """
+    Display article detail page if user is authorized.
+    """
     article = get_object_or_404(Article, pk=pk)
     if article.approved or is_editor(request.user) or article.author == request.user:
         return render(request, 'newsapp/article_detail.html', {'article': article})
@@ -124,6 +148,9 @@ def article_detail_view(request, pk):
 
 @user_passes_test(is_journalist)
 def article_create_view(request):
+    """
+    Allow journalists to create and submit a new article.
+    """
     if request.method == 'POST':
         form = ArticleForm(request.POST)
         if form.is_valid():
@@ -137,6 +164,9 @@ def article_create_view(request):
 
 
 def article_update_view(request, pk):
+    """
+    Allow the article author or an editor to update an article.
+    """
     article = get_object_or_404(Article, pk=pk)
     if request.user == article.author or is_editor(request.user):
         if request.method == 'POST':
@@ -151,8 +181,10 @@ def article_update_view(request, pk):
 
 
 def article_delete_view(request, pk):
+    """
+    Allow the article author or an editor to delete an article.
+    """
     article = get_object_or_404(Article, pk=pk)
-
     if request.user == article.author or is_editor(request.user):
         if request.method == 'POST':
             article.delete()
@@ -165,35 +197,37 @@ def article_delete_view(request, pk):
 
 
 def article_approve_view(request, pk):
+    """
+    Allow editors to approve an article.
+    """
     article = get_object_or_404(Article, pk=pk)
     article.approved = True
     article.save()
     return redirect('article_list')
 
 
-
 @user_passes_test(is_journalist)
 def newsletter_create_view(request):
+    """
+    Allow journalists to create and submit a newsletter.
+    """
     if request.method == 'POST':
         form = NewsletterForm(request.POST)
         if form.is_valid():
             newsletter = form.save(commit=False)
             newsletter.author = request.user
-           # newsletter.publisher = request.POST.get("publisher")
-            # try:
-            #     publisher = Publisher.objects.get(user=request.user)
-            # except Publisher.DoesNotExist:
-            #     # handle error, maybe return with error message or assign None if allowed
-            #     publisher = None
-            # newsletter.publisher = publisher
             newsletter.save()
             return redirect('newsletter_list')
     else:
         form = NewsletterForm()
     return render(request, 'newsapp/newsletter_create.html', {'form': form})
 
+
 # Newsletter Views
 def newsletter_list_view(request):
+    """
+    List newsletters based on user role (Reader, Editor, or Journalist).
+    """
     if is_reader(request.user):
         newsletters = Newsletter.objects.filter(published=True)
     elif is_editor(request.user):
@@ -207,6 +241,9 @@ def newsletter_list_view(request):
 
 @login_required
 def newsletter_update_view(request, pk):
+    """
+    Allow editors or the newsletter author to update a newsletter.
+    """
     newsletter = get_object_or_404(Newsletter, pk=pk)
     if is_editor(request.user) or request.user == newsletter.author:
         if request.method == 'POST':
@@ -219,14 +256,18 @@ def newsletter_update_view(request, pk):
         return render(request, 'newsapp/newsletter_create.html', {'form': form})
     return HttpResponseForbidden()
 
+
 @login_required
 def newsletter_delete_view(request, pk):
+    """
+    Allow editors or the newsletter author to delete a newsletter.
+    """
     newsletter = get_object_or_404(Newsletter, pk=pk)
     if is_editor(request.user) or request.user == newsletter.author:
         newsletter.delete()
         return redirect('newsletter_list')
     return HttpResponseForbidden()
 
-# Optional custom 403 error page
 # def error_403_view(request, exception=None):
+#     """Render a custom 403 Forbidden error page."""
 #     return render(request, 'newsapp/error_403.html', status=403)

@@ -5,6 +5,12 @@ from .models import CustomUser, Article, Newsletter
 
 # Custom user creation with role selection
 class CustomUserCreationForm(UserCreationForm):
+    """
+    Form for creating a new user with role selection.
+
+    Extends Django's built-in UserCreationForm to include email and role fields.
+    Roles include Reader, Editor, Journalist, and test (for development/testing purposes).
+    """
     ROLE_CHOICES = (
         ('Reader', 'Reader'),
         ('Editor', 'Editor'),
@@ -18,22 +24,37 @@ class CustomUserCreationForm(UserCreationForm):
         fields = ('username', 'email', 'role', 'password1', 'password2')
 
 
-# Article create/update form
 class ArticleForm(forms.ModelForm):
+    """
+    Form for creating and updating articles.
+
+    Includes fields for title, content, and the publisher associated with the article.
+    """
+
     class Meta:
         model = Article
         fields = ['title', 'content', 'publisher']
 
 
-# Newsletter create form
 class NewsletterForm(forms.ModelForm):
+    """
+    Form for creating newsletters.
+
+    Includes fields for title, content, and the publisher sending the newsletter.
+    """
+
     class Meta:
         model = Newsletter
         fields = ['title', 'content', 'publisher']
 
 
-# Subscription form for Readers
 class SubscriptionForm(forms.ModelForm):
+    """
+    Form used by Reader users to subscribe to publishers and journalists.
+
+    Provides multiple choice options via checkboxes for selecting subscriptions.
+    """
+
     class Meta:
         model = CustomUser
         fields = ['subscribed_publishers', 'subscribed_journalists']
